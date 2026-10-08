@@ -6,7 +6,20 @@ App Android (Expo + React Native) para seguir el menú semanal de la guardería 
 2. Una IA (Claude o ChatGPT, a elegir) lo lee, extrae las comidas de cada día y propone una cena que complementa lo que ha comido, respetando las alergias, la edad y los gustos del perfil del niño.
 3. Ves la semana día a día, con avisos si algún plato de la guardería puede contener un alérgeno del perfil.
 
-## Puesta en marcha
+## Probar la app solo con el móvil
+
+Cada vez que se sube código a GitHub (rama `main` o `claude/...`), el workflow
+`.github/workflows/android-apk.yml` compila un APK y lo publica en la sección
+**Releases** del repositorio (tarda unos 15–20 minutos):
+
+1. En el navegador del móvil abre `github.com/garal-code/carely/releases`.
+2. Descarga `carely.apk` de la build más reciente.
+3. Ábrelo y acepta instalar apps de origen desconocido para tu navegador.
+
+El APK funciona sin ordenador ni servidor de desarrollo. Está firmado con una
+clave de pruebas, así que sirve para tu móvil pero no para Google Play.
+
+## Puesta en marcha (con ordenador)
 
 Requisitos: Node 20+ y la app **Expo Go** en el móvil Android (Play Store).
 
@@ -21,6 +34,7 @@ Comprobaciones:
 
 ```bash
 npm run typecheck
+npm run lint
 npx expo-doctor
 ```
 

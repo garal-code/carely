@@ -1,0 +1,63 @@
+# Genera un APK instalable de Carely y lo publica como "release" de GitHub,
+# para poder descargarlo e instalarlo directamente desde el móvil.
+name: Android APK
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Comprobar tipos y lint
+        run: |
+          npx tsc --noEmit
+          npx expo lint
+
+      - name: Generar proyecto Android
+        run: npx expo prebuild --platform android --no-install
+
+      # El proyecto generado firma la build "release" con la clave de debug:
+      # vale para instalarla en tu móvil, no para publicarla en Google Play.
+      # Solo se compila para arm64-v8a (casi todos los móviles actuales) para
+      # acelerar la build.
+      - name: Compilar APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+
+      - name: Publicar APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-${{ github.run_number }}-${{ github.run_attempt }}"
+          cp android/app/build/outputs/apk/release/app-release.apk carely.apk
+          gh release create "$TAG" carely.apk \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "Carely (build ${{ github.run_number }})" \
+            --notes "APK de prueba generado desde la rama ${{ github.ref_name }} (commit ${GITHUB_SHA::7})."

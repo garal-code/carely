@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PROVIDER_LABELS } from '../../ai';
@@ -23,8 +23,6 @@ export default function SettingsScreen() {
   const [keyDraft, setKeyDraft] = useState('');
   const [openaiModelDraft, setOpenaiModelDraft] = useState(settings.openaiModel);
 
-  useEffect(() => setKeyDraft(''), [provider]);
-
   const savedKey = apiKeys[provider];
 
   return (
@@ -38,7 +36,10 @@ export default function SettingsScreen() {
               key={p}
               label={PROVIDER_LABELS[p]}
               selected={provider === p}
-              onPress={() => updateSettings({ ...settings, provider: p })}
+              onPress={() => {
+                setKeyDraft('');
+                updateSettings({ ...settings, provider: p });
+              }}
             />
           ))}
         </View>
