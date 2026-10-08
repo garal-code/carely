@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Carely",
+    "slug": "carely",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.carely.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Carely necesita acceder a tus fotos para leer el menú de la guardería.",
+          "cameraPermission": "Carely necesita la cámara para fotografiar el menú de la guardería.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "scheme": "carely"
+  }
+}
