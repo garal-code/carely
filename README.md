@@ -3,12 +3,13 @@
 App Android (Expo + React Native) para seguir el menú semanal de la guardería de tu hijo y recibir una **propuesta de cena equilibrada** para cada día.
 
 1. Subes el menú de la guardería (foto o PDF).
-2. Una IA (Claude o ChatGPT, a elegir) lo lee, extrae las comidas de cada día y propone una cena que complementa lo que ha comido, respetando las alergias, la edad y los gustos del perfil del niño.
+2. Una IA (Claude por defecto, o ChatGPT) lo lee, extrae las comidas de cada día y propone una cena que complementa lo que ha comido, respetando las alergias, la edad y los gustos del perfil del niño.
 3. Ves la semana día a día, con avisos si algún plato de la guardería puede contener un alérgeno del perfil.
 
 ## Probar la app solo con el móvil
 
-Cada vez que se sube código a GitHub (rama `main` o `claude/...`), el workflow
+Primero despliega el servidor y conéctalo (secciones de abajo). Después, cada
+vez que se sube código a GitHub (rama `main` o `claude/...`), el workflow
 `.github/workflows/android-apk.yml` compila un APK y lo publica en la sección
 **Releases** del repositorio (tarda unos 15–20 minutos):
 
@@ -30,48 +31,87 @@ npm run android    # o lánzalo en un emulador Android
 npm run web        # vista previa rápida en el navegador
 ```
 
+Para la app en local crea un `.env` (ver `.env.example`) apuntando al servidor.
+Servidor en local:
+
+```bash
+cd server
+npm install
+ANTHROPIC_API_KEY=sk-ant-... APP_TOKEN=dev npm run dev
+```
+
 Comprobaciones:
 
 ```bash
 npm run typecheck
 npm run lint
+npm run typecheck --prefix server
 npx expo-doctor
 ```
 
-## Configurar la IA
+## Cómo funciona por dentro
 
-En la pestaña **Ajustes** eliges el proveedor y pegas tu clave de API:
+```
+App Android ──HTTPS──▶ Servidor Carely (Railway) ──▶ Claude / ChatGPT
+```
 
-| Proveedor | Dónde conseguir la clave | Modelo por defecto |
-|---|---|---|
-| Claude (Anthropic) | https://platform.claude.com/settings/keys | `claude-opus-5-5` (también Sonnet 5.5 y Haiku 5.5, más baratos) |
-| ChatGPT (OpenAI) | https://platform.openai.com/api-keys | `gpt-6.1-sol` (editable) |
+Las familias no necesitan ninguna cuenta de IA: la app envía la foto o el PDF
+al servidor de Carely, que es quien tiene la clave de API y la paga. El
+servidor vive en `server/` y se despliega en Railway.
 
-> **Importante:** las suscripciones de chat (Claude Pro/Max, ChatGPT Plus/Pro) **no** dan acceso a la API. Hace falta una cuenta de desarrollador con saldo de pago por uso en la plataforma de cada proveedor. Analizar un menú cuesta del orden de céntimos.
+## Desplegar el servidor en Railway
 
-La clave se guarda cifrada en el dispositivo (`expo-secure-store`) y la app llama a la API directamente desde el móvil; no hay servidor intermedio.
+Se puede hacer todo desde el navegador del móvil.
 
-Con Claude se activa el *fallback* del servidor (`fallbacks: "default"`): si los filtros de seguridad rechazaran una petición, la API la reintenta automáticamente con otro modelo.
+1. Consigue una clave de API de Claude en https://platform.claude.com/settings/keys
+   y añade algo de saldo (cada menú cuesta del orden de céntimos).
+2. En Railway: **New Project → Deploy from GitHub repo → garal-code/carely**.
+3. En el servicio creado, **Settings → Root Directory**: `server`.
+4. En **Variables** añade:
+   - `ANTHROPIC_API_KEY`: la clave del paso 1.
+   - `APP_TOKEN`: una contraseña larga inventada (p. ej. 40 letras y números al azar).
+5. **Settings → Networking → Generate Domain**. Copia la URL
+   (`https://carely-xxxx.up.railway.app`) y comprueba que `…/health` responde
+   `{"ok":true}`.
+
+Variables opcionales: `AI_PROVIDER=openai` + `OPENAI_API_KEY` para usar
+ChatGPT, `CLAUDE_MODEL` / `OPENAI_MODEL` para cambiar de modelo y
+`RATE_LIMIT_PER_HOUR` (20 por defecto) para limitar análisis por IP. Ver
+`server/.env.example`.
+
+## Conectar la app con el servidor
+
+En GitHub, **Settings → Secrets and variables → Actions**:
+
+- Pestaña **Variables** → `CARELY_API_URL` = la URL de Railway.
+- Pestaña **Secrets** → `CARELY_APP_TOKEN` = el mismo valor que `APP_TOKEN`.
+
+La build del APK los incrusta en la app. Si cambias alguno, vuelve a lanzar el
+workflow **Android APK** desde la pestaña Actions.
+
+> El `APP_TOKEN` evita que cualquiera use tu servidor, pero va dentro del APK,
+> así que no es una protección fuerte. Antes de publicar la app para el
+> público habría que añadir cuentas de usuario o la verificación de Google Play
+> (Play Integrity).
 
 ## Estructura
 
 ```
-src/
-  app/                 Pantallas (Expo Router)
-    (tabs)/index.tsx   Semana: menú actual por días + histórico
-    (tabs)/upload.tsx  Subir foto/PDF y analizar
-    (tabs)/profile.tsx Perfil del niño (edad, alergias, dieta, gustos)
-    (tabs)/settings.tsx Proveedor de IA, clave y modelo
-    menu/[id].tsx      Detalle de un menú guardado
-  ai/
-    prompt.ts          Prompt de sistema + esquema JSON compartido
-    claude.ts          Llamada a Claude (imagen/PDF + salida estructurada)
-    openai.ts          Llamada a OpenAI Responses API
-  context/AppContext.tsx  Estado global y persistencia
-  lib/                 Almacenamiento, lectura de ficheros, cálculo de edad
+src/                    App (Expo Router)
+  app/(tabs)/index.tsx  Semana: menú actual por días + histórico
+  app/(tabs)/upload.tsx Subir foto/PDF y analizar
+  app/(tabs)/profile.tsx Perfil del niño (edad, alergias, dieta, gustos)
+  app/menu/[id].tsx     Detalle de un menú guardado
+  lib/api.ts            Llamada al servidor de Carely
+  context/AppContext.tsx Estado global y persistencia
+server/                 API (Node + Express) para Railway
+  src/index.ts          Endpoint POST /v1/menus/analyze
+  src/prompt.ts         Prompt de sistema + esquema JSON de la respuesta
+  src/claude.ts         Llamada a Claude (imagen/PDF + salida estructurada)
+  src/openai.ts         Llamada a OpenAI (Responses API)
 ```
 
-Los datos (perfil, menús) se guardan localmente con AsyncStorage.
+Los datos (perfil, menús) se guardan solo en el móvil con AsyncStorage; el servidor no guarda nada.
 
 ## Próximos pasos posibles
 

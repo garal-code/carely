@@ -1,6 +1,6 @@
-import { DIET_LABELS, WEEKDAYS } from '../constants';
-import { describeAge } from '../lib/age';
-import type { ChildProfile } from '../types';
+import { describeAge } from './age.js';
+import { DIET_LABELS, WEEKDAYS } from './types.js';
+import type { ChildProfile } from './types.js';
 
 /**
  * Esquema JSON de la respuesta. Es compatible con las salidas estructuradas de

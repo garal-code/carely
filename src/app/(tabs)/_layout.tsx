@@ -27,7 +27,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: 'Semana', tabBarIcon: tabIcon('calendar-outline') }} />
       <Tabs.Screen name="upload" options={{ title: 'Subir menú', tabBarIcon: tabIcon('camera-outline') }} />
       <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: tabIcon('happy-outline') }} />
-      <Tabs.Screen name="settings" options={{ title: 'Ajustes', tabBarIcon: tabIcon('settings-outline') }} />
     </Tabs>
   );
 }

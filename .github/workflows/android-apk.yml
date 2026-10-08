@@ -32,12 +32,24 @@ jobs:
           java-version: 17
 
       - name: Instalar dependencias
-        run: npm ci
+        run: |
+          npm ci
+          npm ci --prefix server
 
       - name: Comprobar tipos y lint
         run: |
           npx tsc --noEmit
           npx expo lint
+          npm run typecheck --prefix server
+
+      - name: Comprobar configuración
+        env:
+          EXPO_PUBLIC_API_URL: ${{ vars.CARELY_API_URL }}
+        run: |
+          if [ -z "$EXPO_PUBLIC_API_URL" ]; then
+            echo "::error::Falta la variable CARELY_API_URL (Settings → Secrets and variables → Actions → Variables) con la URL del servidor en Railway."
+            exit 1
+          fi
 
       - name: Generar proyecto Android
         run: npx expo prebuild --platform android --no-install
@@ -48,6 +60,10 @@ jobs:
       # acelerar la build.
       - name: Compilar APK
         working-directory: android
+        env:
+          # Se incrustan en la app al empaquetar el JavaScript.
+          EXPO_PUBLIC_API_URL: ${{ vars.CARELY_API_URL }}
+          EXPO_PUBLIC_APP_TOKEN: ${{ secrets.CARELY_APP_TOKEN }}
         run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
 
       - name: Publicar APK

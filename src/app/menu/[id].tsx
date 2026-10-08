@@ -1,10 +1,10 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Alert, Platform, ScrollView, StyleSheet } from 'react-native';
 
-import { PROVIDER_LABELS } from '../../ai';
 import { MenuView } from '../../components/MenuView';
 import { Button, Card, Muted } from '../../components/ui';
 import { useApp } from '../../context/AppContext';
+import { PROVIDER_LABELS } from '../../lib/api';
 import { spacing } from '../../theme';
 
 export default function MenuDetailScreen() {
@@ -44,7 +44,7 @@ export default function MenuDetailScreen() {
       <Stack.Screen options={{ title: menu.weekLabel || 'Menú semanal' }} />
       <MenuView menu={menu} />
       <Muted>
-        Analizado con {PROVIDER_LABELS[menu.provider]} ({menu.model}) a partir de «{menu.source.name}».
+        Analizado con {PROVIDER_LABELS[menu.provider] ?? 'IA'} a partir de «{menu.source.name}».
       </Muted>
       <Button title="Borrar menú" variant="danger" onPress={confirmDelete} />
     </ScrollView>

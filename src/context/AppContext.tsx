@@ -1,19 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
-import { DEFAULT_PROFILE, DEFAULT_SETTINGS } from '../constants';
+import { DEFAULT_PROFILE } from '../constants';
 import * as storage from '../lib/storage';
-import type { AIProvider, AISettings, ChildProfile, WeeklyMenu } from '../types';
+import type { ChildProfile, WeeklyMenu } from '../types';
 
 interface AppState {
   ready: boolean;
   profile: ChildProfile;
-  settings: AISettings;
   menus: WeeklyMenu[];
-  apiKeys: Record<AIProvider, string>;
   updateProfile: (profile: ChildProfile) => Promise<void>;
-  updateSettings: (settings: AISettings) => Promise<void>;
-  updateApiKey: (provider: AIProvider, key: string) => Promise<void>;
   addMenu: (menu: WeeklyMenu) => Promise<void>;
   deleteMenu: (id: string) => Promise<void>;
 }
@@ -23,25 +19,15 @@ const AppContext = createContext<AppState | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState<ChildProfile>(DEFAULT_PROFILE);
-  const [settings, setSettings] = useState<AISettings>(DEFAULT_SETTINGS);
   const [menus, setMenus] = useState<WeeklyMenu[]>([]);
   const menusRef = useRef<WeeklyMenu[]>([]);
-  const [apiKeys, setApiKeys] = useState<Record<AIProvider, string>>({ claude: '', openai: '' });
 
   useEffect(() => {
     (async () => {
-      const [p, s, m, claude, openai] = await Promise.all([
-        storage.loadProfile(),
-        storage.loadSettings(),
-        storage.loadMenus(),
-        storage.loadApiKey('claude'),
-        storage.loadApiKey('openai'),
-      ]);
+      const [p, m] = await Promise.all([storage.loadProfile(), storage.loadMenus()]);
       setProfile(p);
-      setSettings(s);
       menusRef.current = m;
       setMenus(m);
-      setApiKeys({ claude, openai });
       setReady(true);
     })();
   }, []);
@@ -49,16 +35,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateProfile = useCallback(async (next: ChildProfile) => {
     setProfile(next);
     await storage.saveProfile(next);
-  }, []);
-
-  const updateSettings = useCallback(async (next: AISettings) => {
-    setSettings(next);
-    await storage.saveSettings(next);
-  }, []);
-
-  const updateApiKey = useCallback(async (provider: AIProvider, key: string) => {
-    setApiKeys((prev) => ({ ...prev, [provider]: key.trim() }));
-    await storage.saveApiKey(provider, key);
   }, []);
 
   const commitMenus = useCallback(async (next: WeeklyMenu[]) => {
@@ -78,19 +54,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({
-      ready,
-      profile,
-      settings,
-      menus,
-      apiKeys,
-      updateProfile,
-      updateSettings,
-      updateApiKey,
-      addMenu,
-      deleteMenu,
-    }),
-    [ready, profile, settings, menus, apiKeys, updateProfile, updateSettings, updateApiKey, addMenu, deleteMenu],
+    () => ({ ready, profile, menus, updateProfile, addMenu, deleteMenu }),
+    [ready, profile, menus, updateProfile, addMenu, deleteMenu],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

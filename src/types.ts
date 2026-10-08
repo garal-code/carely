@@ -14,12 +14,6 @@ export interface ChildProfile {
 
 export type AIProvider = 'claude' | 'openai';
 
-export interface AISettings {
-  provider: AIProvider;
-  claudeModel: string;
-  openaiModel: string;
-}
-
 export type MealType = 'desayuno' | 'media_manana' | 'comida' | 'merienda';
 
 export type Weekday =

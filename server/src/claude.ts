@@ -1,8 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-import type { MenuFile } from '../lib/files';
-import type { AIMenuResult } from '../types';
-import { MENU_SCHEMA, SYSTEM_PROMPT } from './prompt';
+import type { AIMenuResult, MenuFile } from './types.js';
+import { MENU_SCHEMA, SYSTEM_PROMPT } from './prompt.js';
 
 export async function analyzeWithClaude(params: {
   apiKey: string;
@@ -12,9 +11,7 @@ export async function analyzeWithClaude(params: {
 }): Promise<AIMenuResult> {
   const { apiKey, model, file, userPrompt } = params;
 
-  // La app llama a la API directamente desde el dispositivo con la clave del
-  // usuario; `dangerouslyAllowBrowser` es necesario para la vista previa web.
-  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+  const client = new Anthropic({ apiKey });
 
   const fileBlock: Anthropic.Beta.BetaContentBlockParam =
     file.kind === 'pdf'

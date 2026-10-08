@@ -1,4 +1,4 @@
-import type { AISettings, ChildProfile, Diet, MealType, Weekday } from './types';
+import type { ChildProfile, Diet, MealType, Weekday } from './types';
 
 /** Los 14 alérgenos de declaración obligatoria en la UE (Reglamento 1169/2011). */
 export const EU_ALLERGENS = [
@@ -52,14 +52,6 @@ export const WEEKDAY_LABELS: Record<Weekday, string> = {
   domingo: 'Domingo',
 };
 
-export const CLAUDE_MODELS = [
-  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5 (recomendado)' },
-  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5 (más económico)' },
-  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5 (el más barato)' },
-];
-
-export const OPENAI_MODEL_SUGGESTIONS = ['gpt-6.1-sol', 'gpt-5.5', 'gpt-5.4-mini'];
-
 export const DEFAULT_PROFILE: ChildProfile = {
   name: '',
   birthDate: '',
@@ -69,10 +61,4 @@ export const DEFAULT_PROFILE: ChildProfile = {
   likes: '',
   dislikes: '',
   notes: '',
-};
-
-export const DEFAULT_SETTINGS: AISettings = {
-  provider: 'claude',
-  claudeModel: 'claude-opus-5-5',
-  openaiModel: 'gpt-6.1-sol',
 };

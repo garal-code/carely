@@ -8,18 +8,16 @@ import { useApp } from '../../context/AppContext';
 import { colors, spacing } from '../../theme';
 
 export default function WeekScreen() {
-  const { menus, profile, apiKeys, settings } = useApp();
+  const { menus, profile } = useApp();
   const [latest, ...previous] = menus;
   const hasProfile = profile.name.trim().length > 0;
-  const hasKey = apiKeys[settings.provider].length > 0;
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      {(!hasProfile || !hasKey) && (
+      {!hasProfile && (
         <Card>
           <SectionTitle>Primeros pasos</SectionTitle>
           <SetupStep done={hasProfile} label="Completa el perfil de tu hijo" onPress={() => router.navigate('/profile')} />
-          <SetupStep done={hasKey} label="Conecta Claude o ChatGPT en Ajustes" onPress={() => router.navigate('/settings')} />
           <SetupStep done={false} label="Sube el menú de la guardería" onPress={() => router.navigate('/upload')} />
         </Card>
       )}

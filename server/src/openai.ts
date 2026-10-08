@@ -1,8 +1,7 @@
 import OpenAI from 'openai';
 
-import type { MenuFile } from '../lib/files';
-import type { AIMenuResult } from '../types';
-import { MENU_SCHEMA, SYSTEM_PROMPT } from './prompt';
+import type { AIMenuResult, MenuFile } from './types.js';
+import { MENU_SCHEMA, SYSTEM_PROMPT } from './prompt.js';
 
 export async function analyzeWithOpenAI(params: {
   apiKey: string;
@@ -12,7 +11,7 @@ export async function analyzeWithOpenAI(params: {
 }): Promise<AIMenuResult> {
   const { apiKey, model, file, userPrompt } = params;
 
-  const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+  const client = new OpenAI({ apiKey });
 
   const fileItem: OpenAI.Responses.ResponseInputContent =
     file.kind === 'pdf'

@@ -5,9 +5,9 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Image, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { analyzeMenu, PROVIDER_LABELS } from '../../ai';
 import { Button, Card, Muted, SectionTitle } from '../../components/ui';
 import { useApp } from '../../context/AppContext';
+import { analyzeMenu } from '../../lib/api';
 import { normalizeImageMimeType, readAsBase64, stripDataUrl } from '../../lib/files';
 import type { MenuFile } from '../../lib/files';
 import { colors, radius, spacing } from '../../theme';
@@ -18,10 +18,9 @@ function showError(title: string, message: string) {
 }
 
 export default function UploadScreen() {
-  const { profile, settings, apiKeys, addMenu } = useApp();
+  const { profile, addMenu } = useApp();
   const [file, setFile] = useState<MenuFile | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const apiKey = apiKeys[settings.provider];
 
   async function pickImage(fromCamera: boolean) {
     const permission = fromCamera
@@ -69,13 +68,9 @@ export default function UploadScreen() {
 
   async function analyze() {
     if (!file) return;
-    if (!apiKey) {
-      showError('Falta la clave de API', `Configura tu clave de ${PROVIDER_LABELS[settings.provider]} en Ajustes.`);
-      return;
-    }
     setAnalyzing(true);
     try {
-      const menu = await analyzeMenu({ file, profile, settings, apiKey });
+      const menu = await analyzeMenu(file, profile);
       await addMenu(menu);
       setFile(null);
       router.navigate('/');
@@ -134,11 +129,12 @@ export default function UploadScreen() {
           <Button title="Analizar con IA" onPress={analyze} loading={analyzing} />
           {analyzing ? (
             <Muted>
-              {PROVIDER_LABELS[settings.provider]} está leyendo el menú y preparando las cenas. Puede tardar hasta un minuto.
+              Estamos leyendo el menú y preparando las cenas. Puede tardar hasta un minuto.
             </Muted>
           ) : (
             <Muted>
-              Se enviará a {PROVIDER_LABELS[settings.provider]} junto con el perfil de {profile.name.trim() || 'tu hijo'}.
+              La IA leerá el menú y propondrá cenas pensadas para {profile.name.trim() || 'tu hijo'}. Las propuestas
+              son orientativas y no sustituyen el consejo de tu pediatra.
             </Muted>
           )}
         </Card>
