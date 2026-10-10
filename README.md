@@ -9,7 +9,7 @@ App Android (Expo + React Native) para seguir el menú semanal de la guardería 
 ## Probar la app solo con el móvil
 
 Primero despliega el servidor y conéctalo (secciones de abajo). Después, cada
-vez que se sube código a GitHub (rama `main` o `claude/...`), el workflow
+vez que se sube código a GitHub (ramas `main`, `develop` o `claude/...`), el workflow
 `.github/workflows/android-apk.yml` compila un APK y lo publica en la sección
 **Releases** del repositorio (tarda unos 15–20 minutos):
 
