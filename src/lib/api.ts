@@ -6,7 +6,8 @@ import type { MenuFile } from './files';
 const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
 const APP_TOKEN = process.env.EXPO_PUBLIC_APP_TOKEN ?? '';
 
-const TIMEOUT_MS = 3 * 60 * 1000;
+// Los menús mensuales tardan bastante más en analizarse.
+const TIMEOUT_MS = 5 * 60 * 1000;
 
 export const PROVIDER_LABELS: Record<AIProvider, string> = {
   claude: 'Claude',

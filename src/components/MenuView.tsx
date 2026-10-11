@@ -1,51 +1,107 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { MEAL_LABELS, WEEKDAY_LABELS, WEEKDAYS } from '../constants';
+import { MEAL_LABELS } from '../constants';
+import { findInitialSelection, formatDayTab, todayISO } from '../lib/menu';
 import { colors, radius, spacing } from '../theme';
 import type { DayPlan, WeeklyMenu } from '../types';
 import { Card, Chip, Muted } from './ui';
 
-function todayWeekday() {
-  // getDay(): 0 = domingo
-  return WEEKDAYS[(new Date().getDay() + 6) % 7];
-}
-
 export function MenuView({ menu }: { menu: WeeklyMenu }) {
-  const days = [...menu.days].sort((a, b) => WEEKDAYS.indexOf(a.day) - WEEKDAYS.indexOf(b.day));
-  const initial = days.find((d) => d.day === todayWeekday()) ?? days[0];
-  const [selected, setSelected] = useState(initial?.day);
-  const day = days.find((d) => d.day === selected) ?? initial;
+  const today = todayISO();
+  const [selection, setSelection] = useState(() => findInitialSelection(menu, today));
+  const weekCount = menu.weeks.length;
+  const isMultiWeek = weekCount > 1;
+  const weekIndex = Math.min(selection.weekIndex, Math.max(weekCount - 1, 0));
+  const week = menu.weeks[weekIndex];
+  const day = week?.days[selection.dayIndex] ?? week?.days[0];
 
-  if (!day) {
-    return (
-      <Card>
-        <Muted>La IA no ha encontrado ningún día en este menú.</Muted>
-      </Card>
-    );
-  }
+  // Al cambiar de semana se abre el primer día, salvo que la semana incluya hoy.
+  const goToWeek = (index: number) => {
+    const todayIndex = menu.weeks[index].days.findIndex((d) => d.date === today);
+    setSelection({ weekIndex: index, dayIndex: Math.max(todayIndex, 0) });
+  };
 
   return (
     <View style={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayTabs}>
-        {days.map((d) => (
-          <Chip
-            key={d.day}
-            label={WEEKDAY_LABELS[d.day]}
-            selected={d.day === day.day}
-            onPress={() => setSelected(d.day)}
+      {isMultiWeek && (
+        <View style={styles.weekSwitcher}>
+          <WeekArrow
+            direction="back"
+            disabled={weekIndex === 0}
+            onPress={() => goToWeek(weekIndex - 1)}
           />
-        ))}
-      </ScrollView>
-      <DayCard day={day} />
+          <View style={styles.weekInfo}>
+            <Text style={styles.weekLabel} numberOfLines={2}>
+              {week.label || `Semana ${weekIndex + 1}`}
+            </Text>
+            <Text style={styles.weekCount}>
+              Semana {weekIndex + 1} de {weekCount}
+            </Text>
+          </View>
+          <WeekArrow
+            direction="forward"
+            disabled={weekIndex === weekCount - 1}
+            onPress={() => goToWeek(weekIndex + 1)}
+          />
+        </View>
+      )}
+
+      {day ? (
+        <>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayTabs}>
+            {week.days.map((d, i) => (
+              <Chip
+                key={d.date || i}
+                label={d.date === today ? `${formatDayTab(d)} · Hoy` : formatDayTab(d)}
+                selected={d === day}
+                onPress={() => setSelection({ weekIndex, dayIndex: i })}
+              />
+            ))}
+          </ScrollView>
+          <DayCard day={day} />
+        </>
+      ) : (
+        <Card>
+          <Muted>La IA no ha encontrado ningún día en este menú.</Muted>
+        </Card>
+      )}
+
       {menu.generalNotes ? (
         <Card>
-          <Text style={styles.cardTitle}>Notas de la semana</Text>
+          <Text style={styles.cardTitle}>{isMultiWeek ? 'Notas del menú' : 'Notas de la semana'}</Text>
           <Muted>{menu.generalNotes}</Muted>
         </Card>
       ) : null}
     </View>
+  );
+}
+
+function WeekArrow({
+  direction,
+  disabled,
+  onPress,
+}: {
+  direction: 'back' | 'forward';
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={direction === 'back' ? 'Semana anterior' : 'Semana siguiente'}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [styles.weekArrow, pressed && { opacity: 0.6 }]}
+    >
+      <Ionicons
+        name={direction === 'back' ? 'chevron-back' : 'chevron-forward'}
+        size={24}
+        color={disabled ? colors.border : colors.primary}
+      />
+    </Pressable>
   );
 }
 
@@ -121,6 +177,19 @@ function DayCard({ day }: { day: DayPlan }) {
 
 const styles = StyleSheet.create({
   container: { gap: spacing.md },
+  weekSwitcher: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.xs,
+  },
+  weekArrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  weekInfo: { flex: 1, alignItems: 'center', gap: 2 },
+  weekLabel: { fontSize: 16, fontWeight: '700', color: colors.text, textAlign: 'center' },
+  weekCount: { fontSize: 12, color: colors.textMuted },
   dayTabs: { gap: spacing.sm, paddingVertical: spacing.xs },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   cardTitle: { fontSize: 16, fontWeight: '700', color: colors.text },

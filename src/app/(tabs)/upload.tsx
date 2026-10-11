@@ -129,7 +129,7 @@ export default function UploadScreen() {
           <Button title="Analizar con IA" onPress={analyze} loading={analyzing} />
           {analyzing ? (
             <Muted>
-              Estamos leyendo el menú y preparando las cenas. Puede tardar hasta un minuto.
+              Estamos leyendo el menú y preparando las cenas. Un menú mensual puede tardar unos minutos.
             </Muted>
           ) : (
             <Muted>

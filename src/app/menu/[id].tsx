@@ -41,7 +41,7 @@ export default function MenuDetailScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: menu.weekLabel || 'Menú semanal' }} />
+      <Stack.Screen options={{ title: menu.title || 'Menú' }} />
       <MenuView menu={menu} />
       <Muted>
         Analizado con {PROVIDER_LABELS[menu.provider] ?? 'IA'} a partir de «{menu.source.name}».

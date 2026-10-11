@@ -25,7 +25,7 @@ export default function WeekScreen() {
       {latest ? (
         <>
           <View>
-            <Text style={styles.title}>{latest.weekLabel || 'Menú de la semana'}</Text>
+            <Text style={styles.title}>{latest.title || 'Menú'}</Text>
             {hasProfile ? <Muted>Cenas pensadas para {profile.name.trim()}</Muted> : null}
             <Text style={styles.link} onPress={() => router.push(`/menu/${latest.id}`)}>
               Ver detalles
@@ -46,12 +46,12 @@ export default function WeekScreen() {
 
       {previous.length > 0 && (
         <View style={{ gap: spacing.sm }}>
-          <SectionTitle>Semanas anteriores</SectionTitle>
+          <SectionTitle>Menús anteriores</SectionTitle>
           {previous.map((menu) => (
             <Pressable key={menu.id} onPress={() => router.push(`/menu/${menu.id}`)}>
               <Card style={styles.row}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{menu.weekLabel || 'Menú semanal'}</Text>
+                  <Text style={styles.rowTitle}>{menu.title || 'Menú'}</Text>
                   <Muted>Subido el {new Date(menu.createdAt).toLocaleDateString('es-ES')}</Muted>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
