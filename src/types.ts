@@ -44,20 +44,30 @@ export interface DinnerProposal {
 
 export interface DayPlan {
   day: Weekday;
-  /** Fecha si aparece en el menú (AAAA-MM-DD), o cadena vacía. */
+  /**
+   * Fecha del día en formato AAAA-MM-DD. Los menús antiguos guardados pueden
+   * tenerla vacía.
+   */
   date: string;
   schoolMeals: SchoolMeal[];
   allergenAlerts: string[];
   dinner: DinnerProposal;
 }
 
-/** Lo que devuelve el modelo de IA. */
-export interface AIMenuResult {
-  weekLabel: string;
+/** Semana natural (de lunes a domingo) con sus días en orden cronológico. */
+export interface WeekPlan {
+  label: string;
   days: DayPlan[];
+}
+
+/** Lo que devuelve el modelo de IA. Puede cubrir una semana o un mes. */
+export interface AIMenuResult {
+  title: string;
+  weeks: WeekPlan[];
   generalNotes: string;
 }
 
+/** Menú guardado (semanal o mensual); se mantiene el nombre por compatibilidad. */
 export interface WeeklyMenu extends AIMenuResult {
   id: string;
   createdAt: string;

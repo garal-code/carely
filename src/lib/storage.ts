@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { DEFAULT_PROFILE } from '../constants';
 import type { ChildProfile, WeeklyMenu } from '../types';
+import { normalizeMenu } from './menu';
 
 const KEYS = {
   profile: 'carely.profile',
@@ -27,7 +28,9 @@ export async function loadMenus(): Promise<WeeklyMenu[]> {
   if (!raw) return [];
   try {
     const menus = JSON.parse(raw);
-    return Array.isArray(menus) ? menus : [];
+    if (!Array.isArray(menus)) return [];
+    // Adapta los menús guardados con formatos antiguos y descarta los corruptos.
+    return menus.map(normalizeMenu).filter((menu): menu is WeeklyMenu => menu !== null);
   } catch {
     return [];
   }
