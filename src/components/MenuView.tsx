@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { MEAL_LABELS } from '../constants';
 import { findInitialSelection, formatDayTab, todayISO } from '../lib/menu';
 import { colors, radius, spacing } from '../theme';
 import type { DayPlan, WeeklyMenu } from '../types';
+import { DinnerAlternatives } from './DinnerAlternatives';
 import { Card, Chip, Muted } from './ui';
 
 export function MenuView({ menu }: { menu: WeeklyMenu }) {
@@ -16,6 +18,7 @@ export function MenuView({ menu }: { menu: WeeklyMenu }) {
   const weekIndex = Math.min(selection.weekIndex, Math.max(weekCount - 1, 0));
   const week = menu.weeks[weekIndex];
   const day = week?.days[selection.dayIndex] ?? week?.days[0];
+  const dayIndex = day ? week.days.indexOf(day) : -1;
 
   // Al cambiar de semana se abre el primer día, salvo que la semana incluya hoy.
   const goToWeek = (index: number) => {
@@ -60,7 +63,21 @@ export function MenuView({ menu }: { menu: WeeklyMenu }) {
               />
             ))}
           </ScrollView>
-          <DayCard day={day} />
+          <DayCard
+            day={day}
+            dinnerFooter={
+              day.dinner.dishes.length > 0 ? (
+                <DinnerAlternatives
+                  key={`${weekIndex}-${dayIndex}`}
+                  menuId={menu.id}
+                  weekIndex={weekIndex}
+                  dayIndex={dayIndex}
+                  day={day}
+                  weekDays={week.days}
+                />
+              ) : null
+            }
+          />
         </>
       ) : (
         <Card>
@@ -105,7 +122,7 @@ function WeekArrow({
   );
 }
 
-function DayCard({ day }: { day: DayPlan }) {
+function DayCard({ day, dinnerFooter }: { day: DayPlan; dinnerFooter?: ReactNode }) {
   return (
     <View style={styles.container}>
       {day.allergenAlerts.length > 0 && (
@@ -170,6 +187,7 @@ function DayCard({ day }: { day: DayPlan }) {
             <Text style={[styles.rationale, { flex: 1 }]}>{day.dinner.tips}</Text>
           </View>
         ) : null}
+        {dinnerFooter}
       </Card>
     </View>
   );

@@ -40,7 +40,7 @@ export default function MenuDetailScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Stack.Screen options={{ title: menu.title || 'Menú' }} />
       <MenuView menu={menu} />
       <Muted>
