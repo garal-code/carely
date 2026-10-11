@@ -25,9 +25,14 @@ export type Weekday =
   | 'sabado'
   | 'domingo';
 
+/** Grupo de proteína principal de un plato (ver `PROTEINS` en lib/proteins). */
+export type Protein = 'carne' | 'pescado' | 'huevo' | 'legumbre';
+
 export interface SchoolMeal {
   mealType: MealType;
   dishes: string[];
+  /** Etiquetas de la IA; los menús guardados antes de añadirlas no las tienen. */
+  proteins?: Protein[];
 }
 
 export interface DinnerDish {
@@ -40,6 +45,8 @@ export interface DinnerProposal {
   rationale: string;
   nutrientFocus: string[];
   tips: string;
+  /** Etiquetas de la IA; los menús guardados antes de añadirlas no las tienen. */
+  proteins?: Protein[];
 }
 
 export interface DayPlan {
@@ -52,6 +59,40 @@ export interface DayPlan {
   schoolMeals: SchoolMeal[];
   allergenAlerts: string[];
   dinner: DinnerProposal;
+}
+
+/** 'another': otra receta distinta; 'pantry': cocinar con lo que hay en casa. */
+export type DinnerMode = 'another' | 'pantry';
+
+/** Día del menú de la guardería para el que se pide la cena. */
+export interface DinnerDayInput {
+  /** Fecha del día en formato AAAA-MM-DD. */
+  date: string;
+  day: Weekday;
+  schoolMeals: SchoolMeal[];
+}
+
+/** Día de la semana con la cena elegida, si la hay. */
+export interface DinnerWeekDayInput extends DinnerDayInput {
+  dinner?: { dishes: { name: string }[] };
+}
+
+/** Cuerpo de `POST /v1/dinners/alternative`. */
+export interface DinnerAlternativeRequest {
+  profile: ChildProfile;
+  mode: DinnerMode;
+  /** Ingredientes disponibles; obligatorio con mode 'pantry' (máx. 1000 caracteres). */
+  pantry?: string;
+  day: DinnerDayInput;
+  /** Días de la semana del menú (máx. 7). */
+  week: DinnerWeekDayInput[];
+  currentDinner: DinnerProposal;
+}
+
+export interface DinnerAlternativeResponse {
+  dinner: DinnerProposal;
+  provider: AIProvider;
+  model: string;
 }
 
 /** Semana natural (de lunes a domingo) con sus días en orden cronológico. */

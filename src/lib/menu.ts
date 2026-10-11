@@ -1,6 +1,6 @@
 // Utilidades puras para menús semanales y mensuales. Sin dependencias (solo
 // tipos) para poder probarlas con `node --test`.
-import type { DayPlan, WeekPlan, Weekday, WeeklyMenu } from '../types';
+import type { DayPlan, DinnerProposal, WeekPlan, Weekday, WeeklyMenu } from '../types';
 
 const WEEKDAY_ORDER: Weekday[] = [
   'lunes',
@@ -117,6 +117,28 @@ export function findInitialSelection(menu: WeeklyMenu, today: string): Selection
   }
   if (!hasDates) return { weekIndex: 0, dayIndex: 0 };
   return { weekIndex: menu.weeks.length - 1, dayIndex: 0 };
+}
+
+/**
+ * Devuelve una copia del menú con la cena de ese día sustituida. Si los índices
+ * no existen devuelve el mismo menú.
+ */
+export function replaceDinner(
+  menu: WeeklyMenu,
+  weekIndex: number,
+  dayIndex: number,
+  dinner: DinnerProposal,
+): WeeklyMenu {
+  const week = menu.weeks[weekIndex];
+  if (!week?.days[dayIndex]) return menu;
+  return {
+    ...menu,
+    weeks: menu.weeks.map((w, wi) =>
+      wi !== weekIndex
+        ? w
+        : { ...w, days: w.days.map((d, di) => (di === dayIndex ? { ...d, dinner } : d)) },
+    ),
+  };
 }
 
 /** Etiqueta corta de la pestaña de un día, p. ej. "Lun 6" (o "Lun" sin fecha). */

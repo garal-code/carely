@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
 import type { DayPlan, Weekday, WeeklyMenu } from '../types';
-import { findInitialSelection, formatDayTab, normalizeMenu, todayISO } from './menu.ts';
+import { findInitialSelection, formatDayTab, normalizeMenu, replaceDinner, todayISO } from './menu.ts';
 
 function day(dayName: Weekday, date: string): DayPlan {
   return {
@@ -148,5 +148,34 @@ describe('todayISO', () => {
       String(now.getDate()).padStart(2, '0'),
     ].join('-');
     assert.equal(todayISO(), expected);
+  });
+});
+
+describe('replaceDinner', () => {
+  const NEW_DINNER = {
+    dishes: [{ name: 'Crema de calabacín', description: 'Con queso fresco' }],
+    rationale: 'Ligera',
+    nutrientFocus: ['fibra'],
+    tips: '',
+    proteins: [],
+  };
+
+  test('sustituye solo la cena del día indicado sin mutar el menú', () => {
+    const before = JSON.stringify(OCTOBER);
+    const next = replaceDinner(OCTOBER, 1, 2, NEW_DINNER);
+    assert.equal(JSON.stringify(OCTOBER), before);
+    assert.notEqual(next, OCTOBER);
+    assert.deepEqual(next.weeks[1].days[2].dinner, NEW_DINNER);
+    assert.equal(next.weeks[1].days[2].date, '2026-10-16');
+    assert.equal(next.weeks[0], OCTOBER.weeks[0]);
+    assert.equal(next.weeks[1].days[0], OCTOBER.weeks[1].days[0]);
+    assert.equal(next.id, OCTOBER.id);
+  });
+
+  test('con índices fuera de rango devuelve el mismo menú', () => {
+    assert.equal(replaceDinner(OCTOBER, 2, 0, NEW_DINNER), OCTOBER);
+    assert.equal(replaceDinner(OCTOBER, -1, 0, NEW_DINNER), OCTOBER);
+    assert.equal(replaceDinner(OCTOBER, 0, 3, NEW_DINNER), OCTOBER);
+    assert.equal(replaceDinner(OCTOBER, 0, -1, NEW_DINNER), OCTOBER);
   });
 });

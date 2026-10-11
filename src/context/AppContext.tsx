@@ -2,8 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from 'react';
 
 import { DEFAULT_PROFILE } from '../constants';
+import { replaceDinner as replaceMenuDinner } from '../lib/menu';
 import * as storage from '../lib/storage';
-import type { ChildProfile, WeeklyMenu } from '../types';
+import type { ChildProfile, DinnerProposal, WeeklyMenu } from '../types';
 
 interface AppState {
   ready: boolean;
@@ -12,6 +13,12 @@ interface AppState {
   updateProfile: (profile: ChildProfile) => Promise<void>;
   addMenu: (menu: WeeklyMenu) => Promise<void>;
   deleteMenu: (id: string) => Promise<void>;
+  replaceDinner: (
+    menuId: string,
+    weekIndex: number,
+    dayIndex: number,
+    dinner: DinnerProposal,
+  ) => Promise<void>;
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -53,9 +60,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [commitMenus],
   );
 
+  const replaceDinner = useCallback(
+    async (menuId: string, weekIndex: number, dayIndex: number, dinner: DinnerProposal) => {
+      const current = menusRef.current;
+      const next = current.map((m) =>
+        m.id === menuId ? replaceMenuDinner(m, weekIndex, dayIndex, dinner) : m,
+      );
+      // Menú o día inexistente: no hay nada que guardar.
+      if (next.every((m, i) => m === current[i])) return;
+      await commitMenus(next);
+    },
+    [commitMenus],
+  );
+
   const value = useMemo(
-    () => ({ ready, profile, menus, updateProfile, addMenu, deleteMenu }),
-    [ready, profile, menus, updateProfile, addMenu, deleteMenu],
+    () => ({ ready, profile, menus, updateProfile, addMenu, deleteMenu, replaceDinner }),
+    [ready, profile, menus, updateProfile, addMenu, deleteMenu, replaceDinner],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
