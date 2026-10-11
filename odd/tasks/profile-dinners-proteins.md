@@ -13,11 +13,13 @@ Branch: `feat/profile-dinners-proteins` (from `develop` f1ace7b). Shopping list 
 - [x] 2. App data: types, protein counting (+ keyword fallback) with tests, alternative API client, dinner replacement in context
 - [x] 3. App UI: «Otra receta» / «Cocinar con lo que tengo» with preview and accept
 - [x] 4. App UI: weekly protein view
-- [ ] 5. App UI: keyboard-aware profile form
-- [ ] 6. Verify: typecheck, lint, tests (app + server)
+- [x] 5. App UI: keyboard-aware profile form
+- [x] 6. Verify: typecheck, lint, tests (app + server)
 
 ## Evidence
 - Task 1: commits 42130fe (protein tags), 056afe2 (POST /v1/dinners/alternative) — server typecheck passed; not run against real AI providers.
 - Task 2: commit d6b70fb — npm test 27/27 (RED observed), tsc + lint OK.
 - Task 3: commit f5d735c — tsc + lint OK, npm test 27/27; not verified on device.
 - Task 4: commit 3a1d09f — tsc + lint OK, npm test 27/27; not verified on device.
+- Task 5: commit c0836d9 — core RN KeyboardAwareScrollView (Expo Go compatible); not verified on device.
+- Task 6: app tsc OK, expo lint OK, npm test 27/27, server typecheck OK.
