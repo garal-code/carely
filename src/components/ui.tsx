@@ -10,6 +10,7 @@ import {
 import type { StyleProp, TextInputProps, ViewStyle } from 'react-native';
 
 import { colors, radius, spacing } from '../theme';
+import { useKeyboardAwareInput } from './KeyboardAwareScrollView';
 
 export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return <View style={[styles.card, style]}>{children}</View>;
@@ -32,6 +33,7 @@ export function Button({
   disabled,
   loading,
   icon,
+  accessibilityLabel,
 }: {
   title: string;
   onPress: () => void;
@@ -39,11 +41,13 @@ export function Button({
   disabled?: boolean;
   loading?: boolean;
   icon?: ReactNode;
+  accessibilityLabel?: string;
 }) {
   const isDisabled = disabled || loading;
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       disabled={isDisabled}
       style={({ pressed }) => [
@@ -101,12 +105,26 @@ export function Field({
   hint,
   ...inputProps
 }: { label: string; hint?: string } & TextInputProps) {
+  // Dentro de un KeyboardAwareScrollView, avisa del foco y del crecimiento del texto.
+  const keyboardAware = useKeyboardAwareInput();
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <TextInput
         placeholderTextColor={colors.textMuted}
         {...inputProps}
+        onFocus={(event) => {
+          keyboardAware.onInputFocus();
+          inputProps.onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          keyboardAware.onInputBlur();
+          inputProps.onBlur?.(event);
+        }}
+        onContentSizeChange={(event) => {
+          if (inputProps.multiline) keyboardAware.onInputResize();
+          inputProps.onContentSizeChange?.(event);
+        }}
         style={[styles.input, inputProps.multiline && styles.inputMultiline]}
       />
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}

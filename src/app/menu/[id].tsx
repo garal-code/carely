@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Alert, Platform, ScrollView, StyleSheet } from 'react-native';
 
+import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
 import { MenuView } from '../../components/MenuView';
 import { Button, Card, Muted } from '../../components/ui';
 import { useApp } from '../../context/AppContext';
@@ -40,14 +41,14 @@ export default function MenuDetailScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <KeyboardAwareScrollView contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: menu.title || 'Menú' }} />
       <MenuView menu={menu} />
       <Muted>
         Analizado con {PROVIDER_LABELS[menu.provider] ?? 'IA'} a partir de «{menu.source.name}».
       </Muted>
       <Button title="Borrar menú" variant="danger" onPress={confirmDelete} />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { KeyboardAwareScrollView } from '../../components/KeyboardAwareScrollView';
 import { Button, Card, Chip, Field, Muted, SectionTitle } from '../../components/ui';
 import { DIET_LABELS, EU_ALLERGENS } from '../../constants';
 import { useApp } from '../../context/AppContext';
@@ -35,7 +36,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <KeyboardAwareScrollView contentContainerStyle={styles.content}>
       <Card>
         <SectionTitle>Datos básicos</SectionTitle>
         <Field label="Nombre" value={draft.name} onChangeText={(v) => set('name', v)} placeholder="Ej. Lucía" />
@@ -103,7 +104,7 @@ export default function ProfileScreen() {
       </Card>
 
       <Button title={saved ? 'Perfil guardado ✓' : 'Guardar perfil'} onPress={save} disabled={birthDateInvalid} />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
