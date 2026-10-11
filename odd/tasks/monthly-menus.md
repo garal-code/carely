@@ -12,9 +12,11 @@ Branch: `feat/monthly-menus` (from `develop`)
 ## Tasks
 - [x] 1. Server: schema, prompt, types and output budget for multi-week menus
 - [x] 2. App: types, legacy normalization and pure menu helpers with `node --test` tests
-- [ ] 3. App UI: week switcher + dated day tabs, titles, request timeout
-- [ ] 4. Verify: typecheck + lint (app and server)
+- [x] 3. App UI: week switcher + dated day tabs, titles, request timeout
+- [x] 4. Verify: typecheck + lint (app and server)
 
 ## Evidence
 - Task 1: commit 0cb3565 — server typecheck passed; Claude call switched to streaming (SDK requires it above ~21k max_tokens).
 - Task 2: commit f11508b — npm test 13/13 pass (RED observed: module missing); tsc errors only in UI files, fixed by Task 3.
+- Task 3: commit 225ec32 — week switcher, dated tabs, 5 min timeout, updated upload copy.
+- Task 4: tsc OK, expo lint OK, npm test 13/13, server typecheck OK. Not yet checked visually on device.
