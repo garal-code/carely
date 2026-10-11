@@ -9,7 +9,7 @@ Branch: `feat/profile-dinners-proteins` (from `develop` f1ace7b). Shopping list 
 - Weekly protein view: per week, school meals + chosen dinners with protein counts split into comida / cena / total, labelled as planned menu, not confirmed intake.
 
 ## Tasks
-- [ ] 1. Server: protein tags in analysis schema + dinner alternative endpoint
+- [x] 1. Server: protein tags in analysis schema + dinner alternative endpoint
 - [ ] 2. App data: types, protein counting (+ keyword fallback) with tests, alternative API client, dinner replacement in context
 - [ ] 3. App UI: «Otra receta» / «Cocinar con lo que tengo» with preview and accept
 - [ ] 4. App UI: weekly protein view
@@ -17,3 +17,4 @@ Branch: `feat/profile-dinners-proteins` (from `develop` f1ace7b). Shopping list 
 - [ ] 6. Verify: typecheck, lint, tests (app + server)
 
 ## Evidence
+- Task 1: commits 42130fe (protein tags), 056afe2 (POST /v1/dinners/alternative) — server typecheck passed; not run against real AI providers.
