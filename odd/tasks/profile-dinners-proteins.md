@@ -12,7 +12,7 @@ Branch: `feat/profile-dinners-proteins` (from `develop` f1ace7b). Shopping list 
 - [x] 1. Server: protein tags in analysis schema + dinner alternative endpoint
 - [x] 2. App data: types, protein counting (+ keyword fallback) with tests, alternative API client, dinner replacement in context
 - [x] 3. App UI: «Otra receta» / «Cocinar con lo que tengo» with preview and accept
-- [ ] 4. App UI: weekly protein view
+- [x] 4. App UI: weekly protein view
 - [ ] 5. App UI: keyboard-aware profile form
 - [ ] 6. Verify: typecheck, lint, tests (app + server)
 
@@ -20,3 +20,4 @@ Branch: `feat/profile-dinners-proteins` (from `develop` f1ace7b). Shopping list 
 - Task 1: commits 42130fe (protein tags), 056afe2 (POST /v1/dinners/alternative) — server typecheck passed; not run against real AI providers.
 - Task 2: commit d6b70fb — npm test 27/27 (RED observed), tsc + lint OK.
 - Task 3: commit f5d735c — tsc + lint OK, npm test 27/27; not verified on device.
+- Task 4: commit 3a1d09f — tsc + lint OK, npm test 27/27; not verified on device.
