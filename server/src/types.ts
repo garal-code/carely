@@ -39,18 +39,32 @@ export interface MenuFile {
   base64: string;
 }
 
+/** Grupos de proteína principales con los que se etiqueta cada comida. */
+export const PROTEINS = ['carne', 'pescado', 'huevo', 'legumbre'] as const;
+
+export type Protein = (typeof PROTEINS)[number];
+
+export interface SchoolMeal {
+  mealType: 'desayuno' | 'media_manana' | 'comida' | 'merienda';
+  dishes: string[];
+  proteins: Protein[];
+}
+
+export interface DinnerProposal {
+  dishes: { name: string; description: string }[];
+  rationale: string;
+  nutrientFocus: string[];
+  tips: string;
+  proteins: Protein[];
+}
+
 export interface DayPlan {
   day: (typeof WEEKDAYS)[number];
   /** Fecha del día en formato AAAA-MM-DD. */
   date: string;
-  schoolMeals: { mealType: 'desayuno' | 'media_manana' | 'comida' | 'merienda'; dishes: string[] }[];
+  schoolMeals: SchoolMeal[];
   allergenAlerts: string[];
-  dinner: {
-    dishes: { name: string; description: string }[];
-    rationale: string;
-    nutrientFocus: string[];
-    tips: string;
-  };
+  dinner: DinnerProposal;
 }
 
 /** Semana natural (de lunes a domingo) con sus días en orden cronológico. */

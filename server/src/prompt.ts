@@ -1,6 +1,14 @@
 import { describeAge } from './age.js';
-import { DIET_LABELS, WEEKDAYS } from './types.js';
+import { DIET_LABELS, PROTEINS, WEEKDAYS } from './types.js';
 import type { ChildProfile } from './types.js';
+
+/** Grupos de proteína principales de una comida (vacío si no hay ninguno). */
+const PROTEINS_SCHEMA = {
+  type: 'array',
+  items: { type: 'string', enum: PROTEINS },
+  description:
+    'Grupos de proteína principales de la comida: carne (incluye aves y embutidos), pescado (incluye marisco), huevo (solo si es componente principal), legumbre (lentejas, garbanzos, alubias, guisantes, soja, tofu). Vacío si no hay ninguno.',
+} as const;
 
 /** Esquema de un día del menú. */
 const DAY_SCHEMA = {
@@ -19,13 +27,14 @@ const DAY_SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['mealType', 'dishes'],
+        required: ['mealType', 'dishes', 'proteins'],
         properties: {
           mealType: {
             type: 'string',
             enum: ['desayuno', 'media_manana', 'comida', 'merienda'],
           },
           dishes: { type: 'array', items: { type: 'string' } },
+          proteins: PROTEINS_SCHEMA,
         },
       },
     },
@@ -38,7 +47,7 @@ const DAY_SCHEMA = {
     dinner: {
       type: 'object',
       additionalProperties: false,
-      required: ['dishes', 'rationale', 'nutrientFocus', 'tips'],
+      required: ['dishes', 'rationale', 'nutrientFocus', 'tips', 'proteins'],
       properties: {
         dishes: {
           type: 'array',
@@ -55,6 +64,7 @@ const DAY_SCHEMA = {
         rationale: { type: 'string' },
         nutrientFocus: { type: 'array', items: { type: 'string' } },
         tips: { type: 'string' },
+        proteins: PROTEINS_SCHEMA,
       },
     },
   },
@@ -112,6 +122,12 @@ Recibirás el menú de una guardería (como foto o PDF), que puede ser semanal o
    - Platos sencillos de preparar en casa entre semana.
 4. NUNCA propongas alimentos que contengan los alérgenos del perfil ni que contradigan su tipo de dieta. Si algún plato de la guardería parece contener un alérgeno del perfil, añádelo en "allergenAlerts" con una explicación breve.
 5. Ten en cuenta los gustos y rechazos del niño cuando sea posible, sin sacrificar el equilibrio.
+6. Etiqueta cada comida de la guardería y cada cena en "proteins" con los grupos de proteína principales que contiene:
+   - "carne": incluye aves y embutidos.
+   - "pescado": incluye marisco.
+   - "huevo": solo cuando el huevo es un componente principal del plato, no un ingrediente menor (rebozados, masas, salsas).
+   - "legumbre": lentejas, garbanzos, alubias, guisantes, soja y tofu.
+   Usa una lista vacía si la comida no contiene ninguno (por ejemplo, una merienda de fruta).
 
 En "rationale" explica en una o dos frases por qué esa cena equilibra el día. En "nutrientFocus" pon los nutrientes clave que aporta (p. ej. "proteína", "hierro", "fibra", "calcio", "omega-3"). En "tips" da un consejo práctico breve (preparación, cómo presentarlo, alternativa).
 Usa "generalNotes" para observaciones de todo el periodo del menú (variedad, algo a vigilar) en dos o tres frases.
