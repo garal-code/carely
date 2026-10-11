@@ -38,7 +38,7 @@ export async function analyzeWithOpenAI(params: {
     text: {
       format: {
         type: 'json_schema',
-        name: 'weekly_menu',
+        name: 'daycare_menu',
         strict: true,
         schema: MENU_SCHEMA as unknown as Record<string, unknown>,
       },

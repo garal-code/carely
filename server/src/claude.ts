@@ -32,9 +32,12 @@ export async function analyzeWithClaude(params: {
   // otro modelo. Haiku no admite este mecanismo.
   const supportsFallbacks = !model.startsWith('claude-haiku');
 
-  const response = await client.beta.messages.create({
+  // Un menú mensual (unos 22 días, cada uno con su cena) necesita mucha salida.
+  // Con este max_tokens el SDK exige streaming; finalMessage() acumula la
+  // respuesta completa.
+  const stream = client.beta.messages.stream({
     model,
-    max_tokens: 16000,
+    max_tokens: 32000,
     ...(supportsFallbacks
       ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const }
       : {}),
@@ -50,6 +53,7 @@ export async function analyzeWithClaude(params: {
       },
     ],
   });
+  const response = await stream.finalMessage();
 
   if (response.stop_reason === 'refusal') {
     throw new Error('Claude no ha podido procesar este menú. Prueba con otra foto o PDF.');

@@ -41,6 +41,7 @@ export interface MenuFile {
 
 export interface DayPlan {
   day: (typeof WEEKDAYS)[number];
+  /** Fecha del día en formato AAAA-MM-DD. */
   date: string;
   schoolMeals: { mealType: 'desayuno' | 'media_manana' | 'comida' | 'merienda'; dishes: string[] }[];
   allergenAlerts: string[];
@@ -52,9 +53,15 @@ export interface DayPlan {
   };
 }
 
-/** Lo que devuelve el modelo de IA. */
-export interface AIMenuResult {
-  weekLabel: string;
+/** Semana natural (de lunes a domingo) con sus días en orden cronológico. */
+export interface WeekPlan {
+  label: string;
   days: DayPlan[];
+}
+
+/** Lo que devuelve el modelo de IA. Puede cubrir una semana o un mes. */
+export interface AIMenuResult {
+  title: string;
+  weeks: WeekPlan[];
   generalNotes: string;
 }

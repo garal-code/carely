@@ -165,7 +165,7 @@ app.post('/v1/menus/analyze', requireAppToken, rateLimit, async (req, res) => {
       : await analyzeWithOpenAI({ apiKey, model, file, userPrompt });
 
   console.log(
-    `analyze ok kind=${file.kind} size=${file.base64.length} days=${menu.days.length} ms=${Date.now() - started}`,
+    `analyze ok kind=${file.kind} size=${file.base64.length} weeks=${menu.weeks.length} days=${menu.weeks.reduce((total, week) => total + week.days.length, 0)} ms=${Date.now() - started}`,
   );
   res.json({ menu, provider: config.provider, model });
 });
