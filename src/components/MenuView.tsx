@@ -9,10 +9,20 @@ import { colors, radius, spacing } from '../theme';
 import type { DayPlan, WeeklyMenu } from '../types';
 import { DinnerAlternatives } from './DinnerAlternatives';
 import { Card, Chip, Muted } from './ui';
+import { WeeklyProteins } from './WeeklyProteins';
+
+type ViewMode = 'days' | 'proteins';
+
+const VIEW_MODES: { value: ViewMode; label: string }[] = [
+  { value: 'days', label: 'Días' },
+  { value: 'proteins', label: 'Proteínas' },
+];
 
 export function MenuView({ menu }: { menu: WeeklyMenu }) {
   const today = todayISO();
   const [selection, setSelection] = useState(() => findInitialSelection(menu, today));
+  // Se mantiene al cambiar de semana.
+  const [mode, setMode] = useState<ViewMode>('days');
   const weekCount = menu.weeks.length;
   const isMultiWeek = weekCount > 1;
   const weekIndex = Math.min(selection.weekIndex, Math.max(weekCount - 1, 0));
@@ -53,31 +63,42 @@ export function MenuView({ menu }: { menu: WeeklyMenu }) {
 
       {day ? (
         <>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayTabs}>
-            {week.days.map((d, i) => (
-              <Chip
-                key={d.date || i}
-                label={d.date === today ? `${formatDayTab(d)} · Hoy` : formatDayTab(d)}
-                selected={d === day}
-                onPress={() => setSelection({ weekIndex, dayIndex: i })}
+          <ModeToggle mode={mode} onChange={setMode} />
+          {mode === 'proteins' ? (
+            <WeeklyProteins days={week.days} />
+          ) : (
+            <>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.dayTabs}
+              >
+                {week.days.map((d, i) => (
+                  <Chip
+                    key={d.date || i}
+                    label={d.date === today ? `${formatDayTab(d)} · Hoy` : formatDayTab(d)}
+                    selected={d === day}
+                    onPress={() => setSelection({ weekIndex, dayIndex: i })}
+                  />
+                ))}
+              </ScrollView>
+              <DayCard
+                day={day}
+                dinnerFooter={
+                  day.dinner.dishes.length > 0 ? (
+                    <DinnerAlternatives
+                      key={`${weekIndex}-${dayIndex}`}
+                      menuId={menu.id}
+                      weekIndex={weekIndex}
+                      dayIndex={dayIndex}
+                      day={day}
+                      weekDays={week.days}
+                    />
+                  ) : null
+                }
               />
-            ))}
-          </ScrollView>
-          <DayCard
-            day={day}
-            dinnerFooter={
-              day.dinner.dishes.length > 0 ? (
-                <DinnerAlternatives
-                  key={`${weekIndex}-${dayIndex}`}
-                  menuId={menu.id}
-                  weekIndex={weekIndex}
-                  dayIndex={dayIndex}
-                  day={day}
-                  weekDays={week.days}
-                />
-              ) : null
-            }
-          />
+            </>
+          )}
         </>
       ) : (
         <Card>
@@ -91,6 +112,31 @@ export function MenuView({ menu }: { menu: WeeklyMenu }) {
           <Muted>{menu.generalNotes}</Muted>
         </Card>
       ) : null}
+    </View>
+  );
+}
+
+function ModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (mode: ViewMode) => void }) {
+  return (
+    <View style={styles.modeToggle} accessibilityRole="tablist">
+      {VIEW_MODES.map(({ value, label }) => {
+        const selected = value === mode;
+        return (
+          <Pressable
+            key={value}
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(value)}
+            style={({ pressed }) => [
+              styles.modeOption,
+              selected && styles.modeOptionSelected,
+              pressed && !selected && { opacity: 0.6 },
+            ]}
+          >
+            <Text style={[styles.modeText, selected && styles.modeTextSelected]}>{label}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -204,6 +250,25 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.xs,
   },
+  modeToggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.xs,
+    gap: spacing.xs,
+  },
+  modeOption: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeOptionSelected: { backgroundColor: colors.primarySoft },
+  modeText: { fontSize: 15, color: colors.textMuted, fontWeight: '600' },
+  modeTextSelected: { color: colors.primary, fontWeight: '700' },
   weekArrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   weekInfo: { flex: 1, alignItems: 'center', gap: 2 },
   weekLabel: { fontSize: 16, fontWeight: '700', color: colors.text, textAlign: 'center' },

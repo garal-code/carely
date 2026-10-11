@@ -1,4 +1,4 @@
-import type { ChildProfile, Diet, MealType, Weekday } from './types';
+import type { ChildProfile, Diet, MealType, Protein, Weekday } from './types';
 
 /** Los 14 alérgenos de declaración obligatoria en la UE (Reglamento 1169/2011). */
 export const EU_ALLERGENS = [
@@ -30,6 +30,13 @@ export const MEAL_LABELS: Record<MealType, string> = {
   media_manana: 'Media mañana',
   comida: 'Comida',
   merienda: 'Merienda',
+};
+
+export const PROTEIN_LABELS: Record<Protein, string> = {
+  carne: 'Carne',
+  pescado: 'Pescado',
+  huevo: 'Huevo',
+  legumbre: 'Legumbres',
 };
 
 export const WEEKDAYS: Weekday[] = [
