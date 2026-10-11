@@ -1,11 +1,24 @@
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 
-import { analyzeWithClaude } from './claude.js';
-import { analyzeWithOpenAI } from './openai.js';
+import { analyzeWithClaude, callClaude } from './claude.js';
+import { buildDinnerPrompt, DINNER_SCHEMA, DINNER_SYSTEM_PROMPT } from './dinner.js';
+import { analyzeWithOpenAI, callOpenAI } from './openai.js';
 import { buildUserPrompt } from './prompt.js';
-import { DIET_LABELS } from './types.js';
-import type { ChildProfile, Diet, MenuFile } from './types.js';
+import { DIET_LABELS, PROTEINS, WEEKDAYS } from './types.js';
+import type {
+  ChildProfile,
+  Diet,
+  DinnerAlternativeRequest,
+  DinnerDayInput,
+  DinnerMode,
+  DinnerProposal,
+  DinnerWeekDayInput,
+  MenuFile,
+  Protein,
+  SchoolMeal,
+  Weekday,
+} from './types.js';
 
 const config = {
   port: Number(process.env.PORT ?? 3000),
@@ -81,6 +94,117 @@ function parseProfile(body: unknown): ChildProfile {
     likes: text(p.likes),
     dislikes: text(p.dislikes),
     notes: text(p.notes),
+  };
+}
+
+// --- Validación de la cena alternativa --------------------------------------
+
+const DINNER_MODES: DinnerMode[] = ['another', 'pantry'];
+const MEAL_TYPES: SchoolMeal['mealType'][] = ['desayuno', 'media_manana', 'comida', 'merienda'];
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_PANTRY_LENGTH = 1000;
+const MAX_WEEK_DAYS = 7;
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function strings(value: unknown, maxItems = 20, max = 200): string[] {
+  return Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === 'string').slice(0, maxItems).map((v) => v.slice(0, max))
+    : [];
+}
+
+// Los menús guardados antes de etiquetar proteínas no las traen: lista vacía.
+function proteins(value: unknown): Protein[] {
+  return Array.isArray(value)
+    ? PROTEINS.filter((protein) => value.includes(protein))
+    : [];
+}
+
+function parseDayInput(value: unknown): DinnerDayInput {
+  if (
+    !isObject(value) ||
+    typeof value.date !== 'string' ||
+    !DATE_RE.test(value.date) ||
+    !WEEKDAYS.includes(value.day as Weekday) ||
+    !Array.isArray(value.schoolMeals)
+  ) {
+    throw new HttpError(400, 'Los datos del día no son válidos.');
+  }
+  const schoolMeals = value.schoolMeals.slice(0, MEAL_TYPES.length).map((meal): SchoolMeal => {
+    if (!isObject(meal) || !MEAL_TYPES.includes(meal.mealType as SchoolMeal['mealType'])) {
+      throw new HttpError(400, 'Los datos del día no son válidos.');
+    }
+    return {
+      mealType: meal.mealType as SchoolMeal['mealType'],
+      dishes: strings(meal.dishes),
+      proteins: proteins(meal.proteins),
+    };
+  });
+  return { date: value.date, day: value.day as Weekday, schoolMeals };
+}
+
+function parseWeek(value: unknown): DinnerWeekDayInput[] {
+  if (!Array.isArray(value)) throw new HttpError(400, 'Faltan los días de la semana.');
+  if (value.length > MAX_WEEK_DAYS) {
+    throw new HttpError(400, 'La semana no puede tener más de 7 días.');
+  }
+  return value.map((entry): DinnerWeekDayInput => {
+    const day = parseDayInput(entry);
+    const dinner = (entry as { dinner?: unknown }).dinner;
+    if (!isObject(dinner) || !Array.isArray(dinner.dishes)) return day;
+    const dishes = dinner.dishes
+      .slice(0, 10)
+      .filter(isObject)
+      .map((dish) => ({ name: text(dish.name, 200) }))
+      .filter((dish) => dish.name);
+    return { ...day, dinner: { dishes } };
+  });
+}
+
+function parseCurrentDinner(value: unknown): DinnerProposal {
+  if (!isObject(value) || !Array.isArray(value.dishes)) {
+    throw new HttpError(400, 'Falta la cena actual del día.');
+  }
+  const dishes = value.dishes
+    .slice(0, 10)
+    .filter(isObject)
+    .map((dish) => ({ name: text(dish.name, 200), description: text(dish.description) }))
+    .filter((dish) => dish.name);
+  return {
+    dishes,
+    rationale: text(value.rationale),
+    nutrientFocus: strings(value.nutrientFocus, 10, 60),
+    tips: text(value.tips),
+    proteins: proteins(value.proteins),
+  };
+}
+
+function parseDinnerRequest(body: unknown): DinnerAlternativeRequest {
+  const b = (isObject(body) ? body : {}) as Record<string, unknown>;
+  if (!DINNER_MODES.includes(b.mode as DinnerMode)) {
+    throw new HttpError(400, 'El tipo de propuesta no es válido.');
+  }
+  const mode = b.mode as DinnerMode;
+  let pantry: string | undefined;
+  if (mode === 'pantry') {
+    if (typeof b.pantry !== 'string' || !b.pantry.trim()) {
+      throw new HttpError(400, 'Indica qué ingredientes tienes en casa.');
+    }
+    if (b.pantry.length > MAX_PANTRY_LENGTH) {
+      throw new HttpError(400, 'La lista de ingredientes es demasiado larga (máximo 1000 caracteres).');
+    }
+    pantry = b.pantry.trim();
+  }
+  if (!isObject(b.profile)) throw new HttpError(400, 'Falta el perfil del niño.');
+  return {
+    profile: parseProfile(body),
+    mode,
+    pantry,
+    day: parseDayInput(b.day),
+    week: parseWeek(b.week),
+    currentDinner: parseCurrentDinner(b.currentDinner),
   };
 }
 
@@ -168,6 +292,50 @@ app.post('/v1/menus/analyze', requireAppToken, rateLimit, async (req, res) => {
     `analyze ok kind=${file.kind} size=${file.base64.length} weeks=${menu.weeks.length} days=${menu.weeks.reduce((total, week) => total + week.days.length, 0)} ms=${Date.now() - started}`,
   );
   res.json({ menu, provider: config.provider, model });
+});
+
+app.post('/v1/dinners/alternative', requireAppToken, rateLimit, async (req, res) => {
+  const input = parseDinnerRequest(req.body);
+  const userPrompt = buildDinnerPrompt(input);
+  const started = Date.now();
+
+  let dinner: DinnerProposal;
+  try {
+    dinner = (
+      config.provider === 'claude'
+        ? await callClaude({
+            apiKey,
+            model,
+            system: DINNER_SYSTEM_PROMPT,
+            content: [{ type: 'text', text: userPrompt }],
+            schema: DINNER_SCHEMA,
+            maxTokens: 4000,
+            refusalMessage: 'Claude no ha podido proponer una cena. Inténtalo de nuevo.',
+          })
+        : await callOpenAI({
+            apiKey,
+            model,
+            system: DINNER_SYSTEM_PROMPT,
+            content: [{ type: 'input_text', text: userPrompt }],
+            schema: DINNER_SCHEMA,
+            schemaName: 'dinner_proposal',
+            emptyMessage: 'ChatGPT no ha devuelto ninguna cena.',
+          })
+    ) as DinnerProposal;
+  } catch (error) {
+    // Aquí no hay fichero: un 400/413 de la IA no se debe a una foto ilegible.
+    const status = (error as { status?: number })?.status;
+    if (status === 400 || status === 413) {
+      console.error('dinner error', error);
+      throw new HttpError(502, 'No se ha podido proponer otra cena. Inténtalo de nuevo.');
+    }
+    throw error;
+  }
+
+  console.log(
+    `dinner ok mode=${input.mode} pantry=${input.pantry?.length ?? 0} week=${input.week.length} dishes=${dinner.dishes.length} proteins=${dinner.proteins.join('+') || '-'} ms=${Date.now() - started}`,
+  );
+  res.json({ dinner, provider: config.provider, model });
 });
 
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {

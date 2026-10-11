@@ -20,6 +20,8 @@ export const WEEKDAYS = [
   'domingo',
 ] as const;
 
+export type Weekday = (typeof WEEKDAYS)[number];
+
 export interface ChildProfile {
   name: string;
   /** Fecha de nacimiento en formato AAAA-MM-DD. */
@@ -71,6 +73,41 @@ export interface DayPlan {
 export interface WeekPlan {
   label: string;
   days: DayPlan[];
+}
+
+// --- Cena alternativa (POST /v1/dinners/alternative) -----------------------
+
+/** 'another': otra receta distinta; 'pantry': cocinar con lo que hay en casa. */
+export type DinnerMode = 'another' | 'pantry';
+
+/** Día del menú de la guardería para el que se pide la cena. */
+export interface DinnerDayInput {
+  /** Fecha del día en formato AAAA-MM-DD. */
+  date: string;
+  day: Weekday;
+  schoolMeals: SchoolMeal[];
+}
+
+/** Día de la semana con la cena elegida, si la hay. */
+export interface DinnerWeekDayInput extends DinnerDayInput {
+  dinner?: { dishes: { name: string }[] };
+}
+
+export interface DinnerAlternativeRequest {
+  profile: ChildProfile;
+  mode: DinnerMode;
+  /** Ingredientes disponibles; obligatorio con mode 'pantry' (máx. 1000 caracteres). */
+  pantry?: string;
+  day: DinnerDayInput;
+  /** Días de la semana del menú (máx. 7). */
+  week: DinnerWeekDayInput[];
+  currentDinner: DinnerProposal;
+}
+
+export interface DinnerAlternativeResponse {
+  dinner: DinnerProposal;
+  provider: 'claude' | 'openai';
+  model: string;
 }
 
 /** Lo que devuelve el modelo de IA. Puede cubrir una semana o un mes. */
