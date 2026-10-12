@@ -23,3 +23,4 @@ Branch: `feat/profile-dinners-proteins` (from `develop` f1ace7b). Shopping list 
 - Task 4: commit 3a1d09f — tsc + lint OK, npm test 27/27; not verified on device.
 - Task 5: commit c0836d9 — core RN KeyboardAwareScrollView (Expo Go compatible); not verified on device.
 - Task 6: app tsc OK, expo lint OK, npm test 27/27, server typecheck OK.
+- Native review: lineage review-b128088c6c17dfc6 approved (risk, resilience, readability, reliability) and acknowledged; 25 non-blocking advisory findings left as follow-up work.
